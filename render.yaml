@@ -1,0 +1,26 @@
+services:
+  # Web Service (FastAPI)
+  - type: web
+    name: geardetector-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ENVIRONMENT
+        value: production
+      - fromGroup: geardetector-secrets
+
+databases:
+  # PostgreSQL Database
+  - name: geardetector-db
+    databaseName: geardetector
+    user: geardetector
+    plan: free
+
+  # Redis Cache
+  - name: geardetector-redis
+    plan: free
