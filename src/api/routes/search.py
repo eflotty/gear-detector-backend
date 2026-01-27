@@ -178,7 +178,8 @@ async def search_gear(request: SearchRequest):
             gear_data = await claude_service.synthesize_gear_data(
                 artist=request.artist,
                 song=request.song,
-                scraper_results=scraper_results
+                scraper_results=scraper_results,
+                year=request.year
             )
 
         # Store in database
