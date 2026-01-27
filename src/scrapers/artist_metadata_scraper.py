@@ -61,8 +61,9 @@ class ArtistMetadataScraper(BaseScraper):
                 metadata["active_years"] = mb_data.get("active_years")
                 metadata["albums"] = mb_data.get("albums", [])
 
-            # Remove duplicates from genres
-            metadata["genre"] = list(set(metadata["genre"]))
+            # Remove duplicates from genres (filter to ensure only strings)
+            genres_as_strings = [str(g) for g in metadata["genre"] if g]
+            metadata["genre"] = list(dict.fromkeys(genres_as_strings))  # Preserves order, removes dupes
 
             success = bool(metadata["genre"] or metadata["production_notes"] or metadata["albums"])
 
@@ -155,8 +156,12 @@ class ArtistMetadataScraper(BaseScraper):
                             artist_data = data["artists"][0]
 
                             # Extract relevant information
+                            # MusicBrainz tags are dicts like {"name": "rock", "count": 100}
+                            tags = artist_data.get("tags", [])[:3] if "tags" in artist_data else []
+                            genre_names = [tag["name"].title() if isinstance(tag, dict) else str(tag) for tag in tags]
+
                             result = {
-                                "genres": artist_data.get("tags", [])[:3] if "tags" in artist_data else [],
+                                "genres": genre_names,
                                 "active_years": None,
                                 "albums": []
                             }
