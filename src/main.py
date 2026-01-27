@@ -1,5 +1,5 @@
 """
-Gear Detector API - Main Application Entry Point
+ToneTrace API - Main Application Entry Point
 """
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,22 +23,22 @@ async def lifespan(app: FastAPI):
     Lifespan context manager for startup and shutdown events
     """
     # Startup
-    logger.info("Starting Gear Detector API...")
+    logger.info("Starting ToneTrace API...")
     await init_db()
     logger.info("Database initialized")
 
     yield
 
     # Shutdown
-    logger.info("Shutting down Gear Detector API...")
+    logger.info("Shutting down ToneTrace API...")
     await close_db()
     logger.info("Database connections closed")
 
 
 # Create FastAPI app
 app = FastAPI(
-    title="Gear Detector API",
-    description="API for detecting guitar gear used by artists in songs",
+    title="ToneTrace API",
+    description="API for identifying guitar gear used by artists in songs",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -75,7 +75,7 @@ app.include_router(search.router, prefix="/api/v1", tags=["search"])
 async def root():
     """Root endpoint"""
     return {
-        "message": "Gear Detector API",
+        "message": "ToneTrace API",
         "version": "1.0.0",
         "docs": "/docs"
     }
