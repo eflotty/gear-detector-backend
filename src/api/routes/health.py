@@ -130,6 +130,46 @@ async def test_scrapers():
     }
 
 
+@router.get("/test-claude")
+async def test_claude():
+    """
+    Test Claude API connection and try different model names
+    """
+    from anthropic import AsyncAnthropic
+
+    if not settings.anthropic_api_key:
+        return {"error": "ANTHROPIC_API_KEY not set"}
+
+    client = AsyncAnthropic(api_key=settings.anthropic_api_key)
+
+    # Try different model names
+    models_to_test = [
+        "claude-3-5-sonnet-20241022",
+        "claude-3-5-sonnet-20240620",
+        "claude-3-sonnet-20240229",
+        "claude-3-opus-20240229"
+    ]
+
+    results = {}
+
+    for model in models_to_test:
+        try:
+            response = await client.messages.create(
+                model=model,
+                max_tokens=10,
+                messages=[{"role": "user", "content": "Hi"}]
+            )
+            results[model] = "✅ WORKS"
+        except Exception as e:
+            results[model] = f"❌ {str(e)[:100]}"
+
+    return {
+        "current_setting": settings.claude_model,
+        "api_key_preview": settings.anthropic_api_key[:15] + "..." if settings.anthropic_api_key else None,
+        "model_tests": results
+    }
+
+
 @router.get("/clear-cache")
 async def clear_cache():
     """
