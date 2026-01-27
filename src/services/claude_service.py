@@ -43,25 +43,12 @@ class ClaudeService:
             Structured gear data with confidence scores
         """
         if not self.client:
-            logger.error("Claude API not configured")
-            return {
-                'error': 'Claude API key not configured',
-                'guitars': [],
-                'amps': [],
-                'pedals': [],
-                'signal_chain': [],
-                'confidence_score': 0.0
-            }
+            logger.error("Claude API not configured - cannot synthesize")
+            raise ValueError("Claude API key not configured. Please set ANTHROPIC_API_KEY in environment variables.")
 
+        # Allow synthesis even with no scraper results - Claude can use its knowledge
         if not scraper_results:
-            return {
-                'error': 'No data to synthesize',
-                'guitars': [],
-                'amps': [],
-                'pedals': [],
-                'signal_chain': [],
-                'confidence_score': 0.0
-            }
+            logger.warning(f"No scraper data available for {artist} - {song}. Using pure Claude inference from its knowledge base.")
 
         # Get artist context for better inference
         artist_context = await self.context_service.get_artist_context(artist, song, year)
@@ -132,12 +119,32 @@ class ClaudeService:
         # Format context for prompt
         context_text = self.context_service.format_context_for_prompt(context)
 
+        # Determine if we have any scraper data
+        has_scraper_data = len(sources_data) > 0
+        data_source_section = ""
+
+        if has_scraper_data:
+            data_source_section = f"""RAW DATA FROM MULTIPLE SOURCES:
+{json.dumps(sources_data, indent=2)}
+
+Use the above data as primary evidence, and supplement with your knowledge where needed."""
+        else:
+            data_source_section = f"""⚠️ NO SCRAPER DATA AVAILABLE - Use pure inference from your knowledge base.
+
+You must use your extensive knowledge of {artist}'s gear, playing style, and the era/album this song is from.
+Base your analysis on:
+- Artist's documented signature gear and preferences
+- Genre conventions and typical gear for this style
+- Album/era production characteristics
+- Your knowledge of this specific song and its tone
+
+Mark all items with appropriate confidence levels (likely use "Inferred" 50-69% or "Likely" 70-89% unless you have strong knowledge of confirmed gear for this artist/song)."""
+
         prompt = f"""You are an expert guitar gear analyst with deep knowledge of artists, gear, and music production. Analyze the following information about {artist}'s gear used in the song "{song}".
 
 {context_text}
 
-RAW DATA FROM MULTIPLE SOURCES:
-{json.dumps(sources_data, indent=2)}
+{data_source_section}
 
 YOUR TASK - CRITICAL REQUIREMENTS:
 You MUST provide comprehensive gear information including BOTH confirmed and intelligently inferred details.

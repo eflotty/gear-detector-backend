@@ -19,6 +19,14 @@ class HealthResponse(BaseModel):
     redis_cache: str
 
 
+class ConfigStatusResponse(BaseModel):
+    """API configuration status"""
+    anthropic_api: str
+    youtube_api: str
+    reddit_api: str
+    scraper_api: str
+
+
 @router.get("/health", response_model=HealthResponse, status_code=status.HTTP_200_OK)
 async def health_check():
     """
@@ -51,3 +59,26 @@ async def health_check():
         health_status["status"] = "unhealthy"
 
     return health_status
+
+
+@router.get("/config-status", response_model=ConfigStatusResponse, status_code=status.HTTP_200_OK)
+async def config_status():
+    """
+    Check which API keys are configured (without exposing the actual keys)
+    """
+    def check_key(key: str) -> str:
+        if not key:
+            return "❌ NOT SET"
+        elif key == "xxxxx" or key.startswith("sk-ant-xxxxx"):
+            return "⚠️ PLACEHOLDER (not real key)"
+        elif len(key) > 10:
+            return f"✅ CONFIGURED ({key[:8]}...)"
+        else:
+            return "⚠️ TOO SHORT (invalid)"
+
+    return ConfigStatusResponse(
+        anthropic_api=check_key(settings.anthropic_api_key),
+        youtube_api=check_key(settings.youtube_api_key),
+        reddit_api=check_key(settings.reddit_client_id) if settings.reddit_client_id else "❌ NOT SET",
+        scraper_api=check_key(settings.scraper_api_key)
+    )

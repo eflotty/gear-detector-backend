@@ -38,11 +38,13 @@ async def search_gear(request: SearchRequest):
     4. Store results in database
     5. Return structured gear information
     """
-    logger.info(f"Search request: {request.artist} - {request.song}")
+    logger.info(f"🔍 Search request: {request.artist} - {request.song} (year: {request.year})")
 
     # Generate search hash for caching
     search_hash = generate_search_hash(request.artist, request.song, request.year)
     search_id = uuid4()
+
+    logger.info(f"🔑 Search ID: {search_id}, Hash: {search_hash}")
 
     try:
         # Check cache
@@ -94,93 +96,22 @@ async def search_gear(request: SearchRequest):
             year=request.year
         )
 
-        if not scraper_results:
-            # Return mock data for testing when scrapers fail
-            logger.warning("No scraper results, returning mock data for testing")
-            gear_data = {
-                "guitars": [
-                    {
-                        "make": "Fender",
-                        "model": "Stratocaster",
-                        "year": 1964,
-                        "notes": "Iconic Strat used throughout Continuum era",
-                        "confidence": 95.0,
-                        "sources": ["Mock Data"]
-                    },
-                    {
-                        "make": "PRS",
-                        "model": "Super Eagle",
-                        "year": None,
-                        "notes": "Custom shop model frequently used in studio",
-                        "confidence": 85.0,
-                        "sources": ["Mock Data"]
-                    }
-                ],
-                "amps": [
-                    {
-                        "make": "Dumble",
-                        "model": "Overdrive Special",
-                        "notes": "Legendary amp used for clean and overdrive tones",
-                        "confidence": 90.0,
-                        "sources": ["Mock Data"]
-                    },
-                    {
-                        "make": "Two-Rock",
-                        "model": "Custom Reverb",
-                        "notes": "Main touring amp",
-                        "confidence": 88.0,
-                        "sources": ["Mock Data"]
-                    }
-                ],
-                "pedals": [
-                    {
-                        "make": "Ibanez",
-                        "model": "TS808 Tube Screamer",
-                        "type": "Overdrive",
-                        "confidence": 95.0,
-                        "sources": ["Mock Data"]
-                    },
-                    {
-                        "make": "Klon",
-                        "model": "Centaur",
-                        "type": "Overdrive",
-                        "confidence": 92.0,
-                        "sources": ["Mock Data"]
-                    },
-                    {
-                        "make": "TC Electronic",
-                        "model": "Flashback",
-                        "type": "Delay",
-                        "confidence": 80.0,
-                        "sources": ["Mock Data"]
-                    }
-                ],
-                "signal_chain": [
-                    {"type": "guitar", "item": "Fender Stratocaster (1964)"},
-                    {"type": "pedal", "item": "Ibanez TS808 Tube Screamer"},
-                    {"type": "pedal", "item": "Klon Centaur"},
-                    {"type": "pedal", "item": "TC Electronic Flashback"},
-                    {"type": "amp", "item": "Dumble Overdrive Special"}
-                ],
-                "amp_settings": {
-                    "gain": "Medium (5-6)",
-                    "treble": "7",
-                    "middle": "5",
-                    "bass": "6",
-                    "notes": "Clean headroom with slight breakup"
-                },
-                "context": f"This is mock data for testing purposes. Real gear data will be available once API keys are configured for {request.artist} - {request.song}.",
-                "confidence_score": 85.0
-            }
+        # Log scraper results
+        if scraper_results:
+            logger.info(f"✓ Scrapers returned {len(scraper_results)} successful results")
+            for result in scraper_results:
+                logger.info(f"  - {result.source_name}: {len(str(result.data))} chars")
         else:
-            # Synthesize with Claude when we have real data
-            claude_service = ClaudeService()
-            gear_data = await claude_service.synthesize_gear_data(
-                artist=request.artist,
-                song=request.song,
-                scraper_results=scraper_results,
-                year=request.year
-            )
+            logger.warning("⚠️ No scraper results - Claude will use pure inference from its knowledge")
+
+        # Always synthesize with Claude (even with no scraper data, Claude can use its knowledge)
+        claude_service = ClaudeService()
+        gear_data = await claude_service.synthesize_gear_data(
+            artist=request.artist,
+            song=request.song,
+            scraper_results=scraper_results,
+            year=request.year
+        )
 
         # Store in database
         async with get_db_session() as session:
