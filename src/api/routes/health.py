@@ -128,3 +128,30 @@ async def test_scrapers():
         "successful_scrapers": successful_scrapers,
         "failed_scrapers": failed_scrapers
     }
+
+
+@router.delete("/clear-cache")
+async def clear_cache():
+    """
+    Clear all cached search results from the database
+
+    DANGER: This deletes all cached searches. Use only for development/debugging.
+    """
+    from src.database.connection import get_db_session
+    from src.database.models import Search, GearResult
+    from sqlalchemy import delete
+
+    async with get_db_session() as session:
+        # Delete all gear results first (foreign key constraint)
+        await session.execute(delete(GearResult))
+
+        # Delete all searches
+        await session.execute(delete(Search))
+
+        await session.commit()
+
+    return {
+        "status": "success",
+        "message": "All cached searches cleared",
+        "note": "Next searches will run scrapers and Claude synthesis from scratch"
+    }
