@@ -22,24 +22,36 @@ class YouTubeScraper(BaseScraper):
     def __init__(self):
         super().__init__()
         self.youtube = None
-        if settings.youtube_api_key:
+
+        # Check if API key is configured
+        if not settings.youtube_api_key:
+            logger.warning("⚠️ YouTube API key not configured (YOUTUBE_API_KEY not set)")
+        elif settings.youtube_api_key == "xxxxx":
+            logger.warning("⚠️ YouTube API key is placeholder value 'xxxxx' - needs real API key")
+        else:
             try:
+                key_preview = settings.youtube_api_key[:8] + "..." if len(settings.youtube_api_key) > 8 else "too_short"
+                logger.info(f"🔑 YouTube API key found: {key_preview}")
                 self.youtube = build('youtube', 'v3', developerKey=settings.youtube_api_key)
-                logger.info("YouTube API client initialized")
+                logger.info("✅ YouTube API client initialized successfully")
             except Exception as e:
-                logger.error(f"Failed to initialize YouTube client: {e}")
+                logger.error(f"❌ Failed to initialize YouTube client: {e}")
 
     async def search(self, artist: str, song: str, year: Optional[int] = None) -> ScraperResult:
         """
         Search YouTube for rig rundown and gear videos
         """
         if not self.youtube:
+            error_msg = "YouTube API not configured - check YOUTUBE_API_KEY environment variable"
+            logger.error(f"❌ YouTube search failed: {error_msg}")
             return ScraperResult(
                 source_name=self.source_name,
                 success=False,
                 data={},
-                error="YouTube API not configured"
+                error=error_msg
             )
+
+        logger.info(f"🎬 YouTube: Starting search for {artist} - {song}")
 
         try:
             gear_data = {
@@ -56,6 +68,7 @@ class YouTubeScraper(BaseScraper):
 
             for query_index, query in enumerate(queries):
                 try:
+                    logger.info(f"🔍 YouTube: Query {query_index + 1}/3: '{query}'")
                     # Search videos (costs 100 quota units per search)
                     search_response = self.youtube.search().list(
                         q=query,
@@ -64,6 +77,9 @@ class YouTubeScraper(BaseScraper):
                         type='video',
                         order='relevance'
                     ).execute()
+
+                    video_count = len(search_response.get('items', []))
+                    logger.info(f"📹 YouTube: Found {video_count} videos for query '{query}'")
 
                     for video_index, item in enumerate(search_response.get('items', [])):
                         video_id = item['id']['videoId']
@@ -117,6 +133,7 @@ class YouTubeScraper(BaseScraper):
                     continue
 
             if not gear_data['videos']:
+                logger.warning(f"❌ YouTube: No relevant videos found for {artist} - {song}")
                 return ScraperResult(
                     source_name=self.source_name,
                     success=False,
@@ -127,6 +144,8 @@ class YouTubeScraper(BaseScraper):
             # Deduplicate gear mentions
             gear_data['gear_mentions'] = list(set(gear_data['gear_mentions']))
 
+            logger.info(f"✅ YouTube: Found {len(gear_data['videos'])} videos, {len(gear_data['gear_mentions'])} unique gear mentions")
+
             return ScraperResult(
                 source_name=self.source_name,
                 success=True,
@@ -135,12 +154,12 @@ class YouTubeScraper(BaseScraper):
             )
 
         except Exception as e:
-            logger.error(f"YouTube scraper error: {e}", exc_info=True)
+            logger.error(f"💥 YouTube scraper EXCEPTION: {type(e).__name__}: {e}", exc_info=True)
             return ScraperResult(
                 source_name=self.source_name,
                 success=False,
                 data={},
-                error=str(e)
+                error=f"{type(e).__name__}: {str(e)}"
             )
 
     async def _get_video_transcript(self, video_id: str) -> Optional[str]:

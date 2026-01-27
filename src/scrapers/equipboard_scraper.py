@@ -40,13 +40,16 @@ class EquipboardScraper(BaseScraper):
 
             # Construct artist profile URL
             artist_url = f"{self.BASE_URL}/pros/{artist_slug}"
+            logger.info(f"🎸 Equipboard: Searching for {artist} at {artist_url}")
 
             async with httpx.AsyncClient(timeout=20) as client:
                 # Fetch artist page
                 response = await client.get(artist_url, headers=self.headers, follow_redirects=True)
 
+                logger.info(f"🌐 Equipboard: HTTP {response.status_code} for {artist}")
+
                 if response.status_code == 404:
-                    logger.info(f"Artist not found on Equipboard: {artist}")
+                    logger.warning(f"❌ Equipboard: Artist not found: {artist}")
                     return ScraperResult(
                         source_name=self.source_name,
                         success=False,
@@ -63,12 +66,16 @@ class EquipboardScraper(BaseScraper):
                 gear_data = self._parse_gear_page(soup)
 
                 if not gear_data or not any(gear_data.values()):
+                    logger.warning(f"❌ Equipboard: No gear found for {artist}")
                     return ScraperResult(
                         source_name=self.source_name,
                         success=False,
                         data={},
                         error="No gear found"
                     )
+
+                total_items = sum(len(v) for v in gear_data.values() if isinstance(v, list))
+                logger.info(f"✅ Equipboard: Found {total_items} gear items for {artist}")
 
                 return ScraperResult(
                     source_name=self.source_name,
@@ -78,12 +85,12 @@ class EquipboardScraper(BaseScraper):
                 )
 
         except Exception as e:
-            logger.error(f"Equipboard scraper error: {e}", exc_info=True)
+            logger.error(f"💥 Equipboard scraper EXCEPTION: {type(e).__name__}: {e}", exc_info=True)
             return ScraperResult(
                 source_name=self.source_name,
                 success=False,
                 data={},
-                error=str(e)
+                error=f"{type(e).__name__}: {str(e)}"
             )
 
     def _parse_gear_page(self, soup: BeautifulSoup) -> dict:

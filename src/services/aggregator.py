@@ -43,7 +43,8 @@ class DataAggregator:
         Returns:
             List of ScraperResult objects
         """
-        logger.info(f"Starting data aggregation for: {artist} - {song}")
+        logger.info(f"🚀 Starting data aggregation for: {artist} - {song}")
+        logger.info(f"📊 Running {len(self.scrapers)} scrapers: {[s.__class__.__name__ for s in self.scrapers]}")
 
         # Execute all scrapers concurrently with timeout protection
         tasks = [
@@ -53,17 +54,25 @@ class DataAggregator:
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        # Filter successful results
+        # Filter successful results with detailed logging
         successful_results = []
-        for result in results:
+        for idx, result in enumerate(results):
+            scraper_name = self.scrapers[idx].__class__.__name__
+
             if isinstance(result, ScraperResult) and result.success:
                 successful_results.append(result)
-                logger.info(f"✓ {result.source_name} found data")
+                data_summary = str(result.data)[:100] if result.data else "empty"
+                logger.info(f"✅ {scraper_name} SUCCESS - Confidence: {result.confidence:.0%}, Data: {data_summary}...")
             elif isinstance(result, ScraperResult):
-                logger.warning(f"✗ {result.source_name} failed: {result.error}")
+                logger.warning(f"❌ {scraper_name} FAILED - Error: {result.error}")
+            elif isinstance(result, Exception):
+                logger.error(f"💥 {scraper_name} EXCEPTION - {type(result).__name__}: {str(result)}")
             else:
-                logger.error(f"✗ Scraper exception: {result}")
+                logger.error(f"❓ {scraper_name} UNKNOWN RESULT - {type(result)}: {result}")
 
-        logger.info(f"Data aggregation complete: {len(successful_results)}/{len(self.scrapers)} sources successful")
+        logger.info(f"📈 Data aggregation complete: {len(successful_results)}/{len(self.scrapers)} sources successful")
+
+        if len(successful_results) == 0:
+            logger.error("⚠️ WARNING: ALL SCRAPERS FAILED - Check API keys and network connectivity")
 
         return successful_results

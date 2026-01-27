@@ -8,6 +8,7 @@ from sqlalchemy import text
 
 from src.config import settings
 from src.database.connection import get_db_session
+from src.services.aggregator import DataAggregator
 
 router = APIRouter()
 
@@ -82,3 +83,48 @@ async def config_status():
         reddit_api=check_key(settings.reddit_client_id) if settings.reddit_client_id else "❌ NOT SET",
         scraper_api=check_key(settings.scraper_api_key)
     )
+
+
+@router.get("/test-scrapers")
+async def test_scrapers():
+    """
+    Test all scrapers with a known artist to verify they're working
+
+    This is a diagnostic endpoint - uses "John Mayer" as test artist
+    Returns detailed results from each scraper
+    """
+    aggregator = DataAggregator()
+
+    # Test with a well-known artist
+    results = await aggregator.aggregate(
+        artist="John Mayer",
+        song="Gravity",
+        year=2006
+    )
+
+    # Format results for display
+    scraper_status = []
+    for result in results:
+        scraper_status.append({
+            "source": result.source_name,
+            "success": result.success,
+            "confidence": result.confidence,
+            "error": result.error,
+            "data_size": len(str(result.data)) if result.data else 0,
+            "has_data": bool(result.data)
+        })
+
+    # Also check scrapers that failed
+    all_scrapers = [s.__class__.__name__.replace('Scraper', '').lower() for s in aggregator.scrapers]
+    successful_scrapers = [r.source_name for r in results if r.success]
+    failed_scrapers = [s for s in all_scrapers if s not in successful_scrapers]
+
+    return {
+        "test_query": "John Mayer - Gravity (2006)",
+        "total_scrapers": len(all_scrapers),
+        "successful": len(successful_scrapers),
+        "failed": len(failed_scrapers),
+        "scraper_details": scraper_status,
+        "successful_scrapers": successful_scrapers,
+        "failed_scrapers": failed_scrapers
+    }
