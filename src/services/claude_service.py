@@ -127,7 +127,11 @@ class ClaudeService:
             data_source_section = f"""RAW DATA FROM MULTIPLE SOURCES:
 {json.dumps(sources_data, indent=2)}
 
-Use the above data as primary evidence, and supplement with your knowledge where needed."""
+⚠️ **IMPORTANT**: Use the above data as your PRIMARY source of truth.
+- Include ALL gear explicitly mentioned in the source data
+- Assign high confidence (90-100%) to gear found in multiple sources or high-quality sources
+- Only supplement with your knowledge if source data is clearly incomplete
+- DO NOT add alternatives or "similar" gear unless found in sources"""
         else:
             data_source_section = f"""⚠️ NO SCRAPER DATA AVAILABLE - Use pure inference from your knowledge base.
 
@@ -147,22 +151,34 @@ Mark all items with appropriate confidence levels (likely use "Inferred" 50-69% 
 {data_source_section}
 
 YOUR TASK - CRITICAL REQUIREMENTS:
-You MUST provide comprehensive gear information including BOTH confirmed and intelligently inferred details.
+Provide gear information with a STRONG PREFERENCE for confirmed/documented gear over inference.
 
 1. **ALWAYS provide complete amp settings** (gain, treble, middle, bass, presence) - infer from tone if not explicitly stated
 2. **ALWAYS provide a complete signal chain** - construct from detected gear or infer based on genre/artist signature sound
 3. Identify guitars, amps, and pedals with confidence levels
 4. Provide context explaining your reasoning, especially for inferred items
 
+⚠️ **GEAR SELECTION PRIORITY** (follow this order strictly):
+1. **FIRST**: Include ALL gear explicitly mentioned in source data (YouTube, Equipboard, interviews)
+2. **SECOND**: Add artist's well-documented signature gear if directly relevant to this song/era
+3. **LAST**: Only infer additional gear if the list seems incomplete AND you have strong evidence
+4. **QUALITY OVER QUANTITY**: Prefer 3-5 confirmed pedals over 10+ inferred ones
+
 CONFIDENCE LEVELS (use these three tiers):
 - **Confirmed** (90-100%): Direct evidence from sources (rig rundowns, interviews, photos)
 - **Likely** (70-89%): Strong circumstantial evidence or artist's known signature gear from same era
 - **Inferred** (50-69%): Educated inference based on tone, genre, artist style, or similar songs
 
-INFERENCE GUIDELINES - When explicit data is sparse, infer intelligently based on:
+⚠️ **AVOID OVER-INFERENCE**:
+- DO NOT list every pedal that COULD produce the effect
+- DO NOT add "alternatives" or "similar" gear unless explicitly found in sources
+- DO NOT infer pedals just because they're common in the genre
+- Focus on what the artist ACTUALLY used, not what would work
+
+INFERENCE GUIDELINES - Only when explicit data is truly missing:
 1. **Artist's signature sound and known gear preferences** (e.g., "Eddie Van Halen = EVH Frankenstein + Marshall")
 2. **Album/era production characteristics** (e.g., "1980s metal = high gain, scooped mids")
-3. **Genre conventions** (e.g., blues rock = tube screamer, jazz = clean amp with reverb)
+3. **Genre conventions** (e.g., blues rock = tube screamer, jazz = clean amp with reverb) - USE SPARINGLY
 4. **Similar songs from the same artist/period**
 5. **Tone analysis from the recording** (bright/warm/dark, clean/overdriven/distorted)
 
@@ -175,8 +191,9 @@ AMP SETTINGS INFERENCE RULES:
 
 SIGNAL CHAIN CONSTRUCTION:
 - Standard order: Guitar → Tuner → Compression → Overdrive/Distortion → Modulation (chorus/flanger) → Delay → Reverb → Amp
-- If specific pedals are unknown, infer based on genre (e.g., blues rock likely has tube screamer, shoegaze has delay/reverb)
-- ALWAYS include at least: Guitar → [inferred pedals if any] → Amp
+- **ONLY include pedals that appear in source data or are well-documented for this artist**
+- If no pedals are documented, it's OK to have: Guitar → Amp (don't force inference)
+- Keep signal chains realistic: Most songs use 3-6 pedals, not 10+
 
 SOURCE CREDIBILITY WEIGHTING:
 - Highest: Equipboard, YouTube rig rundowns, official interviews, artist social media
@@ -245,12 +262,13 @@ OUTPUT FORMAT (JSON) - ALL FIELDS REQUIRED:
 }}
 
 **CRITICAL REQUIREMENTS - You MUST include**:
-- At least one guitar (even if inferred from artist's known gear)
-- At least one amp (even if inferred from genre/era conventions)
-- Complete signal_chain with all detected/inferred gear in logical order
+- At least one guitar (prefer confirmed from sources, infer only if absolutely needed)
+- At least one amp (prefer confirmed from sources, infer only if absolutely needed)
+- Complete signal_chain with detected gear in logical order (avoid padding with inferred pedals)
 - Complete amp_settings with ALL parameters (gain, treble, middle, bass, presence, notes)
-- Context explaining the overall tone and reasoning for inferences
-- Reasoning section explaining your confidence levels and inference logic
+- Context explaining the overall tone and reasoning
+- Reasoning section explaining your confidence levels and sources used
+- **Each gear item MUST have individual confidence score** - be honest about uncertainty
 
 Return ONLY valid JSON, no additional text before or after.
 """
