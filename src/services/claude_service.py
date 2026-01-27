@@ -159,10 +159,15 @@ Provide gear information with a STRONG PREFERENCE for confirmed/documented gear 
 4. Provide context explaining your reasoning, especially for inferred items
 
 ⚠️ **GEAR SELECTION PRIORITY** (follow this order strictly):
-1. **FIRST**: Include ALL gear explicitly mentioned in source data (YouTube, Equipboard, interviews)
+1. **FIRST**: Include ALL gear explicitly mentioned in source data (YouTube, Equipboard, interviews, forums)
+   - If sources document 10+ pedals, include them all - don't artificially limit
+   - If sources document 1-2 pedals, don't pad the list with guesses
 2. **SECOND**: Add artist's well-documented signature gear if directly relevant to this song/era
-3. **LAST**: Only infer additional gear if the list seems incomplete AND you have strong evidence
-4. **QUALITY OVER QUANTITY**: Prefer 3-5 confirmed pedals over 10+ inferred ones
+3. **LAST**: Only infer additional gear when:
+   - Source data is sparse/missing (low confidence scenario)
+   - You have strong evidence from tone analysis or artist knowledge
+   - The setup seems genuinely incomplete (e.g., no pedals but clearly using effects)
+4. **QUALITY OVER QUANTITY**: Prefer accurate confirmed gear over padding with alternatives
 
 CONFIDENCE LEVELS (use these three tiers):
 - **Confirmed** (90-100%): Direct evidence from sources (rig rundowns, interviews, photos)
@@ -191,9 +196,11 @@ AMP SETTINGS INFERENCE RULES:
 
 SIGNAL CHAIN CONSTRUCTION:
 - Standard order: Guitar → Tuner → Compression → Overdrive/Distortion → Modulation (chorus/flanger) → Delay → Reverb → Amp
-- **ONLY include pedals that appear in source data or are well-documented for this artist**
-- If no pedals are documented, it's OK to have: Guitar → Amp (don't force inference)
-- Keep signal chains realistic: Most songs use 3-6 pedals, not 10+
+- **PRIORITIZE pedals that appear in source data or are well-documented for this artist**
+- For high-confidence searches: Include all confirmed pedals (even if 10+)
+- For low-confidence searches: Infer likely pedals based on tone and artist knowledge
+- If truly no pedals documented and tone is clean/direct: Guitar → Amp is acceptable
+- Typical setups range from 3-6 pedals, but can be more or less depending on actual usage
 
 SOURCE CREDIBILITY WEIGHTING:
 - Highest: Equipboard, YouTube rig rundowns, official interviews, artist social media
