@@ -258,7 +258,7 @@ OUTPUT FORMAT (JSON) - ALL FIELDS REQUIRED:
     "presence": "5",
     "notes": "Clean headroom with slight breakup. Settings inferred from warm, articulate tone with clarity."
   }},
-  "context": "Recorded in 2006 for the Continuum album. The tone is characterized by warm, bluesy overdrive with clear articulation. Artist is known for Stratocaster + Dumble combination throughout this era. The delay heard on sustained notes suggests TC Electronic or similar digital delay.",
+  "context": "Recorded in 2006 for the Continuum album. The tone features warm, bluesy overdrive with exceptional clarity. This era showcases the artist's signature Stratocaster + Dumble combination, delivering that characteristic smooth, articulate sound with just enough grit. The subtle delay adds depth without overwhelming the natural tone.",
   "confidence_score": 82.0,
   "reasoning": {{
     "guitars": "Confirmed through video evidence and artist interviews from this period.",
@@ -268,14 +268,32 @@ OUTPUT FORMAT (JSON) - ALL FIELDS REQUIRED:
   }}
 }}
 
+⚠️ **CONFIDENCE SCORING - BE CONSERVATIVE**:
+- **Overall confidence_score**: Average the individual gear confidence scores
+- **If most gear is "Unknown" or highly inferred**: confidence_score should be 15-30%
+- **If mix of confirmed and inferred**: confidence_score should be 40-60%
+- **If mostly confirmed from sources**: confidence_score should be 70-90%
+- **Never give high confidence (>50%) when returning generic/unknown gear**
+
+⚠️ **CONTEXT FIELD - USER-FACING TONE**:
+The "context" field is displayed directly to users. Write it like a knowledgeable music expert, NOT an AI:
+- ✅ GOOD: "This track showcases classic 90s grunge tone with heavily overdriven amps and minimal effects. The raw, aggressive sound relies on high-gain amps pushed hard."
+- ❌ BAD: "No specific gear is documented in the provided sources for this particular performance. The YouTube data contains no relevant information."
+- ✅ GOOD: "Live performance featuring clean, rhythmic guitar work with subtle chorus and ambient reverb"
+- ❌ BAD: "Given the live studio session context and the nature of the original song, the setup would likely emphasize clean tones"
+- Focus on the SOUND and STYLE, not your uncertainty
+- Be confident and informative, even when inferring
+- Don't mention data limitations or source quality
+
 **CRITICAL REQUIREMENTS - You MUST include**:
 - At least one guitar (prefer confirmed from sources, infer only if absolutely needed)
 - At least one amp (prefer confirmed from sources, infer only if absolutely needed)
 - Complete signal_chain with detected gear in logical order (avoid padding with inferred pedals)
 - Complete amp_settings with ALL parameters (gain, treble, middle, bass, presence, notes)
-- Context explaining the overall tone and reasoning
-- Reasoning section explaining your confidence levels and sources used
+- **Context field**: User-facing description of the tone/style (sound confident, focus on music, not data limitations)
+- **Reasoning field**: Technical explanation of your confidence levels and sources (internal use only)
 - **Each gear item MUST have individual confidence score** - be honest about uncertainty
+- **Overall confidence_score**: Must reflect actual certainty (20% for mostly unknown, 80% for mostly confirmed)
 
 Return ONLY valid JSON, no additional text before or after.
 """
