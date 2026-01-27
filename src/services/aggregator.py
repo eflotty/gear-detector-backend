@@ -11,6 +11,7 @@ from src.scrapers.reddit_scraper import RedditScraper
 from src.scrapers.youtube_scraper import YouTubeScraper
 from src.scrapers.gearspace_scraper import GearspaceScraper
 from src.scrapers.web_search_scraper import WebSearchScraper
+from src.scrapers.artist_metadata_scraper import ArtistMetadataScraper
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,8 @@ class DataAggregator:
             RedditScraper(),
             YouTubeScraper(),
             GearspaceScraper(),
-            WebSearchScraper()
+            WebSearchScraper(),
+            ArtistMetadataScraper()  # Provides contextual info for better inference
         ]
 
     async def aggregate(self, artist: str, song: str, year: Optional[int] = None) -> List[ScraperResult]:
