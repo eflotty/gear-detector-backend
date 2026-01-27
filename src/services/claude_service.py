@@ -258,7 +258,7 @@ Return ONLY valid JSON, no additional text before or after.
 
     def _parse_claude_response(self, response_text: str) -> Dict:
         """
-        Parse Claude's JSON response
+        Parse Claude's JSON response with error correction
         """
         try:
             # Remove markdown code blocks if present
@@ -267,8 +267,29 @@ Return ONLY valid JSON, no additional text before or after.
             elif '```' in response_text:
                 response_text = response_text.split('```')[1].split('```')[0].strip()
 
-            # Parse JSON
-            gear_data = json.loads(response_text)
+            # Try to parse JSON
+            try:
+                gear_data = json.loads(response_text)
+            except json.JSONDecodeError as e:
+                # Haiku sometimes makes JSON syntax errors - try to fix common issues
+                logger.warning(f"Initial JSON parse failed: {e}. Attempting to repair...")
+
+                # Common fixes for Haiku's JSON mistakes
+                fixed_text = response_text
+
+                # Fix trailing commas before closing braces/brackets
+                fixed_text = fixed_text.replace(',]', ']').replace(',}', '}')
+
+                # Fix missing commas between objects (common Haiku mistake)
+                import re
+                # Add comma between } and { if missing
+                fixed_text = re.sub(r'\}\s*\{', '},{', fixed_text)
+                # Add comma between } and " if missing (end of object, start of next key)
+                fixed_text = re.sub(r'\}(\s*)"', r'},\1"', fixed_text)
+
+                # Try parsing again
+                gear_data = json.loads(fixed_text)
+                logger.info("✅ Successfully repaired malformed JSON from Claude")
 
             # Validate required fields
             required_fields = ['guitars', 'amps', 'pedals', 'signal_chain', 'confidence_score']
