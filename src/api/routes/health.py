@@ -130,12 +130,13 @@ async def test_scrapers():
     }
 
 
-@router.delete("/clear-cache")
+@router.get("/clear-cache")
 async def clear_cache():
     """
     Clear all cached search results from the database
 
     DANGER: This deletes all cached searches. Use only for development/debugging.
+    Can be called via browser GET request for easy access.
     """
     from src.database.connection import get_db_session
     from src.database.models import Search, GearResult
