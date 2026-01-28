@@ -31,6 +31,35 @@ def generate_search_hash(artist: str, song: str, year: int = None) -> str:
     return hashlib.md5(query_str.encode()).hexdigest()
 
 
+def _sanitize_gear_data(gear_data: dict) -> dict:
+    """
+    Sanitize gear data by parsing year fields from strings to integers
+    Handles cached data that may have string years like "1958-1960 (or reissue)"
+    """
+    import re
+
+    def parse_year(year_value):
+        """Parse year from string or return integer"""
+        if isinstance(year_value, int) or year_value is None:
+            return year_value
+
+        if isinstance(year_value, str):
+            # Extract first 4-digit year
+            match = re.search(r'\b(19\d{2}|20\d{2})\b', year_value)
+            if match:
+                return int(match.group(1))
+
+        return None
+
+    # Fix guitar years
+    if 'guitars' in gear_data:
+        for guitar in gear_data['guitars']:
+            if 'year' in guitar:
+                guitar['year'] = parse_year(guitar['year'])
+
+    return gear_data
+
+
 @router.post("/search", response_model=SearchResponse, status_code=status.HTTP_200_OK)
 async def search_gear(request: SearchRequest):
     """
@@ -212,6 +241,9 @@ async def search_gear_by_photo(body: PhotoSearchRequest, request: Request):
             logger.info(f"⚡ Redis cache hit for photo: {image_hash[:16]}...")
             processing_time = int((time.time() - start_time) * 1000)
 
+            # Fix year fields in cached data
+            cached_data = _sanitize_gear_data(cached_data)
+
             return SearchResponse(
                 search_id=search_id,
                 status='complete',
@@ -237,21 +269,25 @@ async def search_gear_by_photo(body: PhotoSearchRequest, request: Request):
                 logger.info(f"✅ Cache hit for photo search: {image_hash[:16]}...")
                 processing_time = int((time.time() - start_time) * 1000)
 
+                # Fix year fields in cached data
+                db_data = {
+                    'guitars': existing_photo.guitars or [],
+                    'amps': existing_photo.amps or [],
+                    'pedals': existing_photo.pedals or [],
+                    'signal_chain': existing_photo.signal_chain or [],
+                    'amp_settings': existing_photo.amp_settings,
+                    'context': existing_photo.context or f"Photo analysis (cached, {processing_time}ms)",
+                    'confidence_score': existing_photo.confidence_score or 0.0
+                }
+                db_data = _sanitize_gear_data(db_data)
+
                 return SearchResponse(
                     search_id=existing_photo.id,
                     status='complete',
                     artist=None,
                     song=None,
                     year=None,
-                    result=GearResult(**{
-                        'guitars': existing_photo.guitars or [],
-                        'amps': existing_photo.amps or [],
-                        'pedals': existing_photo.pedals or [],
-                        'signal_chain': existing_photo.signal_chain or [],
-                        'amp_settings': existing_photo.amp_settings,
-                        'context': existing_photo.context or f"Photo analysis (cached, {processing_time}ms)",
-                        'confidence_score': existing_photo.confidence_score or 0.0
-                    })
+                    result=GearResult(**db_data)
                 )
 
         # Cache miss - analyze with vision service
