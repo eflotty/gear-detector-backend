@@ -76,3 +76,34 @@ class RawSourceData(Base):
     __table_args__ = (
         Index('idx_search_source', 'search_id', 'source_type'),
     )
+
+
+class PhotoSearch(Base):
+    """
+    Photo-based gear search cache
+    """
+    __tablename__ = "photo_searches"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    image_hash = Column(String(64), unique=True, nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime)  # 90 days
+
+    # Gear result
+    guitars = Column(JSON)
+    amps = Column(JSON)
+    pedals = Column(JSON)
+    signal_chain = Column(JSON)
+    amp_settings = Column(JSON)
+    context = Column(String)
+    confidence_score = Column(Float)
+
+    # Metadata
+    gear_type_hint = Column(String(50), nullable=True)
+    processing_time_ms = Column(Integer)
+    cost_usd = Column(Float)
+    reasoning = Column(JSON)  # Visual quality, identification basis, etc.
+
+    __table_args__ = (
+        Index('idx_image_hash', 'image_hash'),
+    )

@@ -8,8 +8,9 @@ import logging
 from contextlib import asynccontextmanager
 
 from src.config import settings
-from src.api.routes import health, search
+from src.api.routes import health, search, analytics
 from src.database.connection import init_db, close_db
+from src.services.cache_manager import cache_manager
 from src.utils.logger import setup_logging
 
 # Setup logging
@@ -27,10 +28,16 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized")
 
+    await cache_manager.connect()
+    logger.info("Cache manager initialized")
+
     yield
 
     # Shutdown
     logger.info("Shutting down ToneTrace API...")
+    await cache_manager.disconnect()
+    logger.info("Cache manager closed")
+
     await close_db()
     logger.info("Database connections closed")
 
@@ -69,6 +76,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
 app.include_router(search.router, prefix="/api/v1", tags=["search"])
+app.include_router(analytics.router, prefix="/api/v1", tags=["analytics"])
 
 
 @app.get("/")
