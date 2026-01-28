@@ -44,23 +44,32 @@ class WebSearchScraper(BaseScraper):
         try:
             gear_data = {
                 'forum_mentions': [],
-                'gear_from_snippets': []
+                'gear_from_snippets': [],
+                'guitars': [],
+                'amps': [],
+                'pedals': []
             }
 
-            # Multiple search queries to catch different forum discussions
+            # Progressive query strategy: Start specific, fall back to broader
+            # Removed exact phrase matching to increase results
             search_queries = [
-                f'"{artist}" "{song}" guitar gear site:gearspace.com OR site:thegearpage.net',
-                f'"{artist}" "{song}" pedals amp rig forum',
-                f'"{artist}" gear setup {year if year else ""}'.strip()
+                f'{artist} {song} guitar gear pedals rig',  # No quotes - broader match
+                f'{artist} guitar rig setup gear',           # Fallback without song
+                f'{artist} {song} site:thegearpage.net OR site:gearspace.com'  # Forum-specific
             ]
 
             logger.info(f"🔍 Web search: Starting for {artist} - {song}")
 
-            for query in search_queries[:2]:  # Limit to 2 queries to avoid API quota
+            for i, query in enumerate(search_queries):
+                logger.info(f"🔍 Web search: Query {i+1}/3: {query}")
+
                 try:
                     results = await self._search_serpapi(query)
 
                     if results and 'organic_results' in results:
+                        results_found = len(results['organic_results'])
+                        logger.info(f"✅ Query {i+1} returned {results_found} results")
+
                         for result in results['organic_results'][:10]:  # Top 10 results
                             snippet = result.get('snippet', '')
                             title = result.get('title', '')
@@ -78,30 +87,47 @@ class WebSearchScraper(BaseScraper):
                                 })
                                 gear_data['gear_from_snippets'].extend(gear_mentions)
 
+                        # Stop after first successful query to save API quota
+                        if gear_data['forum_mentions']:
+                            logger.info(f"✅ Found results, stopping at query {i+1}")
+                            break
+                    else:
+                        logger.info(f"⚠️ Query {i+1} returned 0 results, trying next...")
+
                 except Exception as e:
-                    logger.warning(f"SerpAPI query failed: {e}")
+                    logger.warning(f"SerpAPI query {i+1} failed: {e}")
                     continue
 
             # Deduplicate gear mentions
             if gear_data['gear_from_snippets']:
                 gear_data['gear_from_snippets'] = list(set(gear_data['gear_from_snippets']))
 
-            if not gear_data['forum_mentions']:
-                logger.info(f"❌ Web search: No forum results found for {artist}")
+                # Categorize extracted gear for easier consumption
+                for gear in gear_data['gear_from_snippets']:
+                    gear_lower = gear.lower()
+                    if any(word in gear_lower for word in ['guitar', 'strat', 'tele', 'les paul', 'sg', 'bass']):
+                        gear_data['guitars'].append(gear)
+                    elif any(word in gear_lower for word in ['amp', 'amplifier', 'head', 'combo', 'twin', 'deluxe', 'marshall', 'vox']):
+                        gear_data['amps'].append(gear)
+                    elif any(word in gear_lower for word in ['pedal', 'overdrive', 'distortion', 'delay', 'reverb', 'chorus', 'fuzz']):
+                        gear_data['pedals'].append(gear)
+
+            # Success if ANY gear extracted, not just forum_mentions
+            if gear_data['guitars'] or gear_data['amps'] or gear_data['pedals'] or gear_data['gear_from_snippets']:
+                logger.info(f"✅ Web search: Found {len(gear_data['forum_mentions'])} forum mentions, {len(gear_data['gear_from_snippets'])} gear items")
                 return ScraperResult(
                     source_name=self.source_name,
-                    success=False,
-                    data={},
-                    error="No relevant forum discussions found"
+                    success=True,
+                    data=gear_data,
+                    confidence=0.6
                 )
 
-            logger.info(f"✅ Web search: Found {len(gear_data['forum_mentions'])} forum mentions, {len(gear_data['gear_from_snippets'])} gear items")
-
+            logger.info(f"❌ Web search: No gear information found for {artist}")
             return ScraperResult(
                 source_name=self.source_name,
-                success=True,
-                data=gear_data,
-                confidence=0.6  # Forum data is medium confidence
+                success=False,
+                data={},
+                error="No gear information found in search results"
             )
 
         except Exception as e:

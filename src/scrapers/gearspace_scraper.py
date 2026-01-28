@@ -6,8 +6,11 @@ from bs4 import BeautifulSoup
 from typing import Optional, List
 import logging
 import re
+import asyncio
+import random
 
 from src.scrapers.base_scraper import BaseScraper, ScraperResult
+from src.scrapers.headers import get_browser_headers
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +24,6 @@ class GearspaceScraper(BaseScraper):
 
     def __init__(self):
         super().__init__()
-        self.headers = {
-            'User-Agent': 'GearDetectorBot/1.0 (+https://geardetector.com)',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        }
 
     async def search(self, artist: str, song: str, year: Optional[int] = None) -> ScraperResult:
         """
@@ -40,9 +39,15 @@ class GearspaceScraper(BaseScraper):
                 'do': 'process'
             }
 
+            # Generate fresh browser headers with referer
+            headers = get_browser_headers(referer=self.BASE_URL)
+
+            # Add small delay to mimic human behavior
+            await asyncio.sleep(random.uniform(0.5, 1.5))
+
             async with httpx.AsyncClient(timeout=20) as client:
                 # Perform search
-                response = await client.get(search_url, params=params, headers=self.headers, follow_redirects=True)
+                response = await client.get(search_url, params=params, headers=headers, follow_redirects=True)
 
                 if response.status_code != 200:
                     return ScraperResult(

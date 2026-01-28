@@ -158,27 +158,42 @@ Provide gear information with a STRONG PREFERENCE for confirmed/documented gear 
 3. Identify guitars, amps, and pedals with confidence levels
 4. Provide context explaining your reasoning, especially for inferred items
 
-⚠️ **GEAR SELECTION PRIORITY** (follow this order strictly):
-1. **FIRST**: Include ALL gear explicitly mentioned in source data (YouTube, Equipboard, interviews, forums)
-   - If sources document 10+ pedals, include them all - don't artificially limit
-   - If sources document 1-2 pedals, don't pad the list with guesses
-2. **SECOND**: Add artist's well-documented signature gear if directly relevant to this song/era
-3. **LAST**: Only infer additional gear when:
-   - Source data is sparse/missing (low confidence scenario)
-   - You have strong evidence from tone analysis or artist knowledge
-   - The setup seems genuinely incomplete (e.g., no pedals but clearly using effects)
-4. **QUALITY OVER QUANTITY**: Prefer accurate confirmed gear over padding with alternatives
+⚠️ **GEAR SELECTION PRIORITY** (follow this order strictly - QUALITY OVER QUANTITY):
+1. **FIRST PRIORITY - OFFICIAL/CONFIRMED GEAR ONLY**: Include gear explicitly mentioned in high-quality sources
+   - Equipboard, Premier Guitar rig rundowns, official interviews, verified photos
+   - YouTube rig rundown videos from official channels or the artist themselves
+   - If multiple sources confirm the same item → Very high confidence (95-100%)
+   - If one reliable source documents it → High confidence (85-95%)
+
+2. **BE SELECTIVE WITH SOURCE DATA**:
+   - If sources document 3-5 pedals from official rig rundowns → List those specific pedals ONLY
+   - If sources document 10+ pedals but some are from low-quality sources (random forums) → FILTER to official/confirmed only
+   - DO NOT list every pedal mentioned in casual forum speculation
+   - Forum/Reddit mentions should supplement official sources, not drive the list
+
+3. **ARTIST SIGNATURE GEAR** (only when directly relevant):
+   - Add well-known signature gear (e.g., "John Mayer = Two Rock amp, Ibanez Tube Screamer")
+   - ONLY if it matches the song's era and there's strong evidence it was used for this recording
+
+4. **MINIMAL INFERENCE** (last resort):
+   - Only infer when source data is genuinely sparse AND setup seems incomplete
+   - Example: Sources confirm guitar + amp but clearly hear overdrive → Infer ONE likely overdrive pedal
+   - DO NOT infer just to have a longer list
+   - NEVER list "alternatives" or "could be" options
 
 CONFIDENCE LEVELS (use these three tiers):
 - **Confirmed** (90-100%): Direct evidence from sources (rig rundowns, interviews, photos)
 - **Likely** (70-89%): Strong circumstantial evidence or artist's known signature gear from same era
 - **Inferred** (50-69%): Educated inference based on tone, genre, artist style, or similar songs
 
-⚠️ **AVOID OVER-INFERENCE**:
-- DO NOT list every pedal that COULD produce the effect
-- DO NOT add "alternatives" or "similar" gear unless explicitly found in sources
-- DO NOT infer pedals just because they're common in the genre
-- Focus on what the artist ACTUALLY used, not what would work
+⚠️ **CRITICAL: AVOID GEAR SPRAWL** (with more data sources, be MORE selective):
+- **DO NOT** list every pedal mentioned across all sources - filter for quality
+- **DO NOT** list every pedal that COULD produce the effect - only what was ACTUALLY used
+- **DO NOT** add "alternatives" or "similar" gear
+- **DO NOT** infer pedals just because they're common in the genre
+- **DO NOT** pad the list to reach a certain number of items
+- **PRIORITIZE**: 3-6 confirmed/official pedals > 15+ mixed-quality mentions
+- **Remember**: Users want THE ACTUAL GEAR, not every possible option
 
 INFERENCE GUIDELINES - Only when explicit data is truly missing:
 1. **Artist's signature sound and known gear preferences** (e.g., "Eddie Van Halen = EVH Frankenstein + Marshall")
@@ -196,11 +211,12 @@ AMP SETTINGS INFERENCE RULES:
 
 SIGNAL CHAIN CONSTRUCTION:
 - Standard order: Guitar → Tuner → Compression → Overdrive/Distortion → Modulation (chorus/flanger) → Delay → Reverb → Amp
-- **PRIORITIZE pedals that appear in source data or are well-documented for this artist**
-- For high-confidence searches: Include all confirmed pedals (even if 10+)
-- For low-confidence searches: Infer likely pedals based on tone and artist knowledge
-- If truly no pedals documented and tone is clean/direct: Guitar → Amp is acceptable
-- Typical setups range from 3-6 pedals, but can be more or less depending on actual usage
+- **ONLY include pedals that are confirmed from official sources or well-documented for this artist**
+- For high-confidence searches with official rig rundowns: Include all confirmed pedals from the rundown
+- For moderate-confidence searches: Include 3-6 most likely/documented pedals - avoid speculation
+- For low-confidence searches: Include guitar → amp direct if no solid pedal data exists
+- **Quality benchmark**: Prefer "Guitar → Amp (direct)" over listing 8 guessed pedals
+- **Remember**: A simple, accurate chain is better than a complex, speculative one
 
 SOURCE CREDIBILITY WEIGHTING:
 - Highest: Equipboard, YouTube rig rundowns, official interviews, artist social media

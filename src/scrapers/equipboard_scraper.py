@@ -5,8 +5,11 @@ import httpx
 from bs4 import BeautifulSoup
 from typing import Optional
 import logging
+import asyncio
+import random
 
 from src.scrapers.base_scraper import BaseScraper, ScraperResult
+from src.scrapers.headers import get_browser_headers
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +23,6 @@ class EquipboardScraper(BaseScraper):
 
     def __init__(self):
         super().__init__()
-        self.headers = {
-            'User-Agent': 'GearDetectorBot/1.0 (+https://geardetector.com)',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        }
 
     async def search(self, artist: str, song: str, year: Optional[int] = None) -> ScraperResult:
         """
@@ -42,9 +41,15 @@ class EquipboardScraper(BaseScraper):
             artist_url = f"{self.BASE_URL}/pros/{artist_slug}"
             logger.info(f"🎸 Equipboard: Searching for {artist} at {artist_url}")
 
+            # Generate fresh browser headers with referer
+            headers = get_browser_headers(referer=self.BASE_URL)
+
+            # Add small delay to mimic human behavior (avoid rate limiting)
+            await asyncio.sleep(random.uniform(0.5, 1.5))
+
             async with httpx.AsyncClient(timeout=20) as client:
                 # Fetch artist page
-                response = await client.get(artist_url, headers=self.headers, follow_redirects=True)
+                response = await client.get(artist_url, headers=headers, follow_redirects=True)
 
                 logger.info(f"🌐 Equipboard: HTTP {response.status_code} for {artist}")
 
