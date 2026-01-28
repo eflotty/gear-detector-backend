@@ -59,8 +59,8 @@ class GearResult(BaseModel):
 class SearchResponse(BaseModel):
     search_id: UUID
     status: str  # 'processing', 'complete', 'error'
-    artist: str
-    song: str
+    artist: Optional[str] = None  # Optional for photo searches
+    song: Optional[str] = None  # Optional for photo searches
     year: Optional[int] = None
     result: Optional[GearResult] = None
     error: Optional[str] = None

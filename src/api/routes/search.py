@@ -355,6 +355,8 @@ async def search_gear_by_photo(body: PhotoSearchRequest, request: Request):
         raise
     except ValueError as e:
         # Validation errors (e.g., image too large)
+        # Clear cache if validation fails to prevent caching bad data
+        await cache_manager.delete_photo_result(image_hash)
         logger.error(f"Photo validation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

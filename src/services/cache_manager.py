@@ -100,6 +100,31 @@ class CacheManager:
             logger.warning(f"Redis set error: {e}")
             return False
 
+    async def delete_photo_result(self, image_hash: str) -> bool:
+        """
+        Delete cached photo search result
+        Used to clear bad cached data (e.g., validation errors)
+
+        Args:
+            image_hash: SHA256 hash of the image
+
+        Returns:
+            True if deleted successfully
+        """
+        if not self.enabled or not self.redis_client:
+            return False
+
+        try:
+            key = f"photo:{image_hash}"
+            deleted = await self.redis_client.delete(key)
+            if deleted:
+                logger.info(f"🗑️ Deleted cached photo result: {image_hash[:16]}...")
+            return deleted > 0
+
+        except Exception as e:
+            logger.warning(f"Redis delete error: {e}")
+            return False
+
     async def get_stats(self) -> Dict:
         """Get cache statistics"""
         if not self.enabled or not self.redis_client:
