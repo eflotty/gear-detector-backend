@@ -160,6 +160,30 @@ class VisionService:
             # Default to JPEG
             return "image/jpeg"
 
+    def _parse_year(self, year_str: str) -> Optional[int]:
+        """
+        Parse year from string, handling ranges like "1958-1960" or "1965 (reissue)"
+
+        Args:
+            year_str: Year string from Claude Vision
+
+        Returns:
+            First valid year as integer, or None if parsing fails
+        """
+        import re
+
+        try:
+            # Extract first 4-digit number
+            match = re.search(r'\b(19\d{2}|20\d{2})\b', year_str)
+            if match:
+                return int(match.group(1))
+
+            # Try to parse as plain integer
+            return int(year_str)
+        except (ValueError, AttributeError):
+            logger.warning(f"Could not parse year: {year_str}")
+            return None
+
     def _build_vision_prompt(self, gear_type: Optional[str], context: Optional[str]) -> str:
         """Build prompt for Claude Vision"""
         gear_hint = f"\nUser hint: Looking for {gear_type}" if gear_type else ""
@@ -171,7 +195,7 @@ Identify all visible guitar gear: guitars, amps, pedals.
 
 For each item, determine:
 - Make and model (e.g., "Fender Stratocaster", "Marshall JCM800")
-- Year/era if identifiable
+- Year if identifiable (single integer year only, e.g., 1965. For ranges, use the earliest year. Include era info in notes if needed.)
 - Key visual cues used for identification
 
 Confidence levels:
@@ -249,6 +273,11 @@ Return ONLY valid JSON:
                 gear_data["confidence_score"] = 50.0
             if "context" not in gear_data:
                 gear_data["context"] = "Photo analysis completed"
+
+            # Fix year fields - convert strings to integers
+            for guitar in gear_data.get("guitars", []):
+                if "year" in guitar and isinstance(guitar["year"], str):
+                    guitar["year"] = self._parse_year(guitar["year"])
 
             return gear_data
 
